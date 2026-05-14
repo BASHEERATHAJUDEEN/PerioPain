@@ -1,0 +1,17 @@
+# Database
+*.db
+
+# Uploads
+uploads/
+
+# IDE
+.vscode/
+
+# Temp/junk files
+*.crdownload
+*Copy*
+
+# Python
+__pycache__/
+*.pyc
+.env
