@@ -2370,6 +2370,23 @@
       border: 2px solid var(--bg2)
     }
   </style>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyAfYFHpHAZhruRmp7V5jPyvaAiLARABpEY",
+    authDomain: "periopain-ai-web.firebaseapp.com",
+    projectId: "periopain-ai-web",
+    storageBucket: "periopain-ai-web.firebasestorage.app",
+    messagingSenderId: "1029394775920",
+    appId: "1:1029394775920:web:fc1c66c7baf043197099b5"
+  };
+  const firebaseApp = initializeApp(firebaseConfig);
+  const auth = getAuth(firebaseApp);
+  window._firebaseAuth = auth;
+  window._firebaseSignIn = signInWithEmailAndPassword;
+</script>
+
 </head>
 
 <body>
@@ -2747,11 +2764,14 @@
       const email = document.getElementById('loginEmail')?.value;
       const pass = document.getElementById('loginPassword')?.value;
       try {
-        const resp = await fetch(`${API_BASE}/api/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password: pass })
-        });
+      const auth = window._firebaseAuth;
+      const userCredential = await window._firebaseSignIn(auth, email, pass);
+      const idToken = await userCredential.user.getIdToken();
+      const resp = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_token: idToken })
+      });
         const data = await resp.json();
         if (data.token) {
           state.user = data.user;
