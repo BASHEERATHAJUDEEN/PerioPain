@@ -991,6 +991,7 @@ def health():
 # ─────────────────────────────────────────────
 #  ENTRY POINT
 # ─────────────────────────────────────────────
+init_db()
 if __name__ == "__main__":
     print("🦷 PerioPain AI Backend — initialising database...")
     init_db()
