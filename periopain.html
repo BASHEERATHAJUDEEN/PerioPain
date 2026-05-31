@@ -777,6 +777,7 @@
       align-items: center;
       background: rgba(8, 11, 16, .85);
       backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border)
     }
 
@@ -2764,25 +2765,54 @@
       const email = document.getElementById('loginEmail')?.value;
       const pass = document.getElementById('loginPassword')?.value;
       try {
-      const auth = window._firebaseAuth;
-      const userCredential = await window._firebaseSignIn(auth, email, pass);
-      const idToken = await userCredential.user.getIdToken();
-      const resp = await fetch(`${API_BASE}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id_token: idToken })
-      });
-        const data = await resp.json();
-        if (data.token) {
-          state.user = data.user;
-          state.token = data.token;
-          toast(`Welcome back, ${data.user.name}!`, 'success');
-          navigate('dashboard');
-        } else {
-          toast(data.error || 'Invalid credentials', 'error');
-        }
-      } catch (e) {
-        toast('Cannot reach server — is backend running?', 'error');
+        const btn = document.querySelector('#loginBtn, button[type="submit"], .btn-login');
+        if (btn) btn.disabled = true;
+
+        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+        const { getAuth, signInWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAfYFHpHAZhruRmp7V5jPyvaAiLARABpEY",
+          authDomain: "periopain-ai-web.firebaseapp.com",
+          projectId: "periopain-ai-web",
+          storageBucket: "periopain-ai-web.firebasestorage.app",
+          messagingSenderId: "1029394775920",
+          appId: "1:1029394775920:web:fc1c66c7baf043197099b5"
+        };
+
+        const fbApp = initializeApp(firebaseConfig, "periopain");
+        const auth = getAuth(fbApp);
+        const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+        const idToken = await userCredential.user.getIdToken();
+
+        const roleMap = {
+          "admin@periopain.ai": "ADMIN",
+          "dentist@periopain.ai": "DENTIST",
+          "researcher@periopain.ai": "RESEARCHER"
+        };
+        const nameMap = {
+          "admin@periopain.ai": "Dr. Admin",
+          "dentist@periopain.ai": "Dr. Priya Sharma",
+          "researcher@periopain.ai": "Dr. Ravi Kumar"
+        };
+
+        state.token = idToken;
+        state.user = {
+          id: userCredential.user.uid,
+          email: email,
+          name: nameMap[email] || email,
+          role: roleMap[email] || "DENTIST"
+        };
+
+        localStorage.setItem('token', idToken);
+        localStorage.setItem('user', JSON.stringify(state.user));
+
+        toast(`Welcome back, ${state.user.name}!`, 'success');
+        navigate('dashboard');
+      } catch (err) {
+        toast(err?.message || 'Login failed', 'error');
+      } finally {
+        showLoading(false);
       }
     }
 
